@@ -1,5 +1,6 @@
 import Sidebar from '@/components/Sidebar';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import LogoutButton from '@/components/LogoutButton';
 
 const links = [
   { href: '/associado', label: 'Meu Perfil' },
@@ -15,8 +16,13 @@ export default function AssociadoLayout({ children }) {
   return (
     <ProtectedRoute allowedType="associado">
       <div className="md:flex">
-        <Sidebar title="Área do Associado" links={links} />
-        <main className="flex-1 p-6">{children}</main>
+        <Sidebar title="AAA SOCIAIS UFPI • Associado" links={links} />
+        <main className="flex-1 p-6 space-y-4">
+          <header className="flex justify-end">
+            <LogoutButton />
+          </header>
+          {children}
+        </main>
       </div>
     </ProtectedRoute>
   );
