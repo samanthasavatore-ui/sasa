@@ -11,6 +11,11 @@ export default function ProtectedRoute({ allowedType, children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth || !db) {
+      setLoading(false);
+      return;
+    }
+
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         router.replace('/login');

@@ -1,28 +1,29 @@
-# Portal do Associado – Atlética Universitária
+# Portal do Associado – AAA SOCIAIS UFPI
 
-Sistema web completo para gestão de associados de uma Atlética Acadêmica, com área administrativa e área de associado.
+Sistema web para gestão de associados da Atlética Acadêmica, com área administrativa e área do associado.
 
-## Stack
-- **Frontend:** Next.js (React)
+## 1) Tecnologias
+- **Frontend:** React + Next.js (App Router)
 - **Backend:** Firebase Authentication + Firestore + Storage
-- **Estilo:** Tailwind CSS
-- **Pagamentos:** integração preparada para Mercado Pago/Asaas
-- **Deploy:** Vercel
+- **Estilização:** Tailwind CSS
+- **Pagamentos:** camada preparada para **Mercado Pago** ou **Asaas** (`lib/payments.js`)
+- **Hospedagem:** Vercel
 
-## Estrutura de pastas
+## 2) Estrutura de pastas
 
 ```bash
 .
 ├── app/
-│   ├── admin/                 # Área administrativa
-│   ├── associado/             # Área do associado
-│   ├── api/exportar-associados/ # Endpoint CSV
+│   ├── admin/                     # Painel da diretoria/tesouraria
+│   ├── associado/                 # Área autenticada do associado
+│   ├── api/exportar-associados/   # Exportação CSV
 │   ├── login/
 │   ├── publico/
 │   ├── layout.jsx
 │   └── page.jsx
 ├── components/
 │   ├── KpiCard.jsx
+│   ├── LogoutButton.jsx
 │   ├── ProtectedRoute.jsx
 │   └── Sidebar.jsx
 ├── firebase/
@@ -31,38 +32,42 @@ Sistema web completo para gestão de associados de uma Atlética Acadêmica, com
 ├── lib/
 │   ├── auth.js
 │   ├── firebase.js
+│   ├── format.js
 │   └── payments.js
-├── public/
-├── README.md
-└── tailwind.config.js
+└── README.md
 ```
 
-## Funcionalidades implementadas
+## 3) Funcionalidades
 
 ### Administrador
-- Login administrativo com Firebase Auth
-- Dashboard com KPIs: total associados, inadimplentes e receita mensal
-- Gestão de associados (cadastro/edição/desativação via modelos de tela)
-- Gestão de mensalidades e visualização de pagamentos
-- Publicação de eventos e notícias
-- Upload de documentos (modelo de tela)
-- Exportação CSV via `/api/exportar-associados`
+- Login administrativo (e-mail/senha)
+- Dashboard com total de associados, inadimplentes e receita
+- Cadastro e edição de associado (vinculado ao `uid` do Firebase Auth)
+- Ativação/suspensão/inadimplência
+- Criação e publicação de eventos
+- Publicação de notícias/comunicados
+- Upload e listagem de documentos (Firebase Storage)
+- Gestão de mensalidades e geração de link de pagamento
+- Exportação da lista de associados em CSV
 
 ### Associado
 - Login individual
 - Visualização de perfil e status
-- Consulta de mensalidades, emissão/solicitação de boleto (modelo)
+- Consulta de mensalidades
+- Download de boletos/links de pagamento
+- Solicitação de novo boleto (placeholder de UX)
 - Histórico de pagamentos
-- Eventos, notícias e documentos
+- Eventos e notícias
+- Download de documentos
 - Carteirinha digital com QR Code
 
 ### Extras
 - Página pública institucional (`/publico`)
-- Estrutura para provedores de pagamento em `lib/payments.js`
+- Estrutura para notificação por e-mail (documentada para evolução)
 
-## Modelo de dados (Firestore)
+## 4) Modelo de dados (Firestore)
 
-### `users`
+### `users/{uid}`
 ```js
 {
   nome_completo: string,
@@ -74,34 +79,40 @@ Sistema web completo para gestão de associados de uma Atlética Acadêmica, com
 }
 ```
 
-### `mensalidades`
+### `mensalidades/{id}`
 ```js
 {
-  user_id: string,
+  user_id: string, // uid do associado
   valor: number,
-  vencimento: timestamp,
+  vencimento: string | timestamp,
   status_pagamento: 'pendente' | 'pago' | 'vencido',
   link_boleto: string
 }
 ```
 
-### Coleções adicionais
+### Outras coleções
 - `eventos`
 - `noticias`
 - `documentos`
 
-## Regras de segurança Firebase
-- Arquivo Firestore: `firebase/firestore.rules`
-- Arquivo Storage: `firebase/storage.rules`
+## 5) Regras de segurança Firebase
+- **Firestore:** `firebase/firestore.rules`
+- **Storage:** `firebase/storage.rules`
 
-## Como rodar localmente
+Resumo:
+- Admin pode gerenciar dados de todo o sistema.
+- Associado acessa apenas seus próprios dados de perfil/mensalidade.
+- Eventos e notícias são públicos para leitura.
+- Documentos exigem usuário autenticado para leitura.
 
-1. Instale dependências:
+## 6) Como rodar localmente
+
+1. Instalar dependências:
 ```bash
 npm install
 ```
 
-2. Crie o arquivo `.env.local`:
+2. Criar `.env.local`:
 ```bash
 NEXT_PUBLIC_FIREBASE_API_KEY=...
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
@@ -112,31 +123,22 @@ NEXT_PUBLIC_FIREBASE_APP_ID=...
 NEXT_PUBLIC_PAYMENT_PROVIDER=mock # mock | mercadopago | asaas
 ```
 
-3. Execute:
+3. Executar:
 ```bash
 npm run dev
 ```
 
-4. Acesse:
-- `http://localhost:3000`
+4. Acessar: `http://localhost:3000`
 
-## Deploy na Vercel
+## 7) Deploy na Vercel
+1. Subir o projeto para GitHub.
+2. Importar o repositório na Vercel.
+3. Configurar as variáveis de ambiente iguais ao `.env.local`.
+4. Fazer deploy.
+5. Após deploy, validar login e regras do Firestore.
 
-1. Suba o projeto para GitHub.
-2. Na Vercel, importe o repositório.
-3. Configure as mesmas variáveis de ambiente do `.env.local`.
-4. Faça deploy.
-
-## Integração de pagamentos (Mercado Pago / Asaas)
-
-Implementação inicial está no arquivo `lib/payments.js`. Para produção:
-1. Criar API routes seguras no Next.js para geração de cobrança.
-2. Usar token secreto no servidor (não no frontend).
-3. Salvar link de boleto/preferência na coleção `mensalidades`.
-4. Configurar webhook para atualizar `status_pagamento` automaticamente.
-
-## Notificações por e-mail (opcional)
-
-Sugestão:
-- Firebase Cloud Functions + SendGrid/Resend.
-- Disparos em criação de mensalidade, lembrete de vencimento e publicação de comunicado.
+## 8) Próximos passos recomendados
+- Migrar integração de pagamento para API Routes seguras com tokens secretos.
+- Implementar webhook para baixa automática de pagamento.
+- Adicionar Cloud Functions + Resend/SendGrid para e-mails automáticos.
+- Adicionar trilha de auditoria para ações de admin.
